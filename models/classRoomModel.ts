@@ -12,7 +12,6 @@ const classSchema: Schema<IClass> = new Schema<IClass>({
     name: {
         type: String,
         required: [true, "Class name is required"],
-        unique: true,
         minlength: [3, "Class name must be at least 3 characters"],
     },
     teacher: {

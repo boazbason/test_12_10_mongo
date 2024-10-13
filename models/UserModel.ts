@@ -15,7 +15,7 @@ const hatSchema: Schema<IUser> = new Schema<IUser>(
         fullName: {
             type: String,
             required: [true, "Username is required"],
-            unique: true,
+            //unique: true,
             minlength: [3, "Username must be at least 3 characters"],
             maxlength: [30, "Username must be less than 30 characters"],
             match: [/^[a-zA-Z0-9_]+$/, "Username must only contain letters and numbers"]
@@ -24,7 +24,7 @@ const hatSchema: Schema<IUser> = new Schema<IUser>(
         email: {
             type: String,
             required: [true, "Email is required"],
-            unique: true,
+            //unique: true,
             validate: {
               validator: (email: string) => validator.isEmail(email),
               message: "Email is invalid"

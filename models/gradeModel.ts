@@ -18,4 +18,4 @@ const gradeSchema: Schema<IGrade> = new Schema<IGrade>({
     },
 });
 
-export default mongoose.model<IGrade>("Grade", gradeSchema);
+export const gradeModel = mongoose.model<IGrade>("Grade", gradeSchema);

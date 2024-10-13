@@ -1,28 +1,61 @@
-import {Users, IUser} from '../models/UserModel';
+import {Users, IUser} from '../models/UserModel.js';
+import {IGrade, gradeModel} from '../models/gradeModel.js';
+import {classRoomModel, IClass} from '../models/classRoomModel.js';
 import mongoose from 'mongoose';
 import { Request, Response } from 'express';
 
 
-export const getAllStudents = async (req: Request, res: Response) => {
-    try {
-        const allStudent = await Users.find({role: "s"});
-        res.status(200).json({ data: allStudent, success: true })
+// export const getAllStudents = async (req: Request, res: Response) => {
+//     try {
+//         const allStudent = await Users.find({role: "student"});
+//         res.status(200).json({ data: allStudent, success: true })
+//     }
+//     catch (error) {
+//         res.status(400).json({ message: "cant get", success: false })
+//     }
+// };
+
+// export const getAllTeachers = async (req: Request, res: Response) => {
+//     try {
+//         const allTeachers = await Users.find({role: "t"});
+//         res.status(200).json({ data: allTeachers, success: true })
+//     }
+//     catch (error) {
+//         res.status(400).json({ message: "cant get", success: false })
+//     }
+// };
+
+export const addGrade = async(req: Request, res: Response)=>{
+    try{
+        const {id_teacher, id_student, subject, grade} = req.body;
+        const student = await Users.findById(id_student);
+
+        //בדיקה אם המורה הוא של התלמיד
+        const teacher = await Users.findById(id_teacher);
+        const classFind = await classRoomModel.findOne({teacher: id_teacher}).populate('students').populate('teacher');
+        console.log(classFind);
+        console.log(classFind?.teacher._id);
+        
+        if(classFind?.teacher._id === id_teacher){
+            console.log("yes");
+        }
+            
+
+
+        if(!student){
+            res.status(400).json({message: "student not found", success: false});
+            return
+        }
+        const newGrade = await gradeModel.create({subject, grade});
+            
+        student.grades.push(newGrade.id);
+        await student.save();
+        res.status(200).json({data: student, success: true})
     }
-    catch (error) {
-        res.status(400).json({ message: "cant get", success: false })
+    catch(error){
+        res.status(400).json({message: error, success: false})
     }
 };
-
-export const getAllTeachers = async (req: Request, res: Response) => {
-    try {
-        const allTeachers = await Users.find({role: "t"});
-        res.status(200).json({ data: allTeachers, success: true })
-    }
-    catch (error) {
-        res.status(400).json({ message: "cant get", success: false })
-    }
-};
-
 export const createStudent = async(req: Request, res: Response)=>{
     try{
         const newStudent = req.body;
@@ -36,6 +69,33 @@ export const createStudent = async(req: Request, res: Response)=>{
         res.status(400).json({ message: error, success: false })
     }
 };
+
+export const getAllStudentsOfTeacher = async(req: Request, res: Response)=>{
+    try{
+        //קבלת המורה
+        const {id_teacher} = req.params;
+        const classFind = await classRoomModel.findOne({teacher: id_teacher}).populate('students').populate('grades');
+
+        if(!classFind){
+            res.status(400).json({message: "class not found", success: false});
+            return
+        }
+        
+        res.status(200).json({data: classFind, success: true})
+    }
+    catch(error){
+        res.status(400).json({message: error, success: false})
+    }
+}
+
+
+
+
+
+
+
+
+
 
 export const getStudentById = async(req: Request, res: Response)=>{
     try{
@@ -52,23 +112,6 @@ export const getStudentById = async(req: Request, res: Response)=>{
     }
 };
 
-export const addGrade = async(req: Request, res: Response)=>{
-    try{
-        const id = req.params.id;
-        const student = await Users.findById(id);
-        if(!student){
-            res.status(400).json({message: "student not found", success: false});
-            return
-        }
-        const newGrade = req.body;
-        student.grades.push(newGrade);
-        await student.save();
-        res.status(200).json({data: student, success: true})
-    }
-    catch(error){
-        res.status(400).json({message: error, success: false})
-    }
-};
 
 export const getGradeById = async(req: Request, res: Response)=>{
     try{

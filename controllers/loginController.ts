@@ -1,35 +1,39 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import {Users, IUser} from '../models/UserModel';
+import {Users, IUser} from '../models/UserModel.js';
 import { JWT_SECRET } from '../middleWare/token.js';
-import {classRoomModel, IClass} from '../models/classRoomModel';
-
+import {classRoomModel, IClass} from '../models/classRoomModel.js';
+//import bcrypt from 'bcryptjs';
 
 
 export const registerTeacher = async (req: Request, res: Response): Promise<void> => {
+    console.log("in register teacher");
+    
     try {
-        const {fullName, password,  email, role, nameClass} = req.body;
+        
+        const {fullName, password,  email, nameClass} = req.body;
         const newUser: any = {
             
             fullName: fullName,
-            password: password,
+            password: password, //bcrypt.hashSync(password, 10),
             email: email,
-            role: role
+            role: "teacher"          
         }
         if (!newUser) {
             res.status(400).json({ message: 'No user data provided' });
             return;
         }
-
+        
         const existingUser = await Users.create(newUser);
-    
+        
         const newClass = new classRoomModel({
             teacher: existingUser._id,
             name: nameClass
-            });
+        });
+        
         await newClass.save();
         
-        await newUser.save();
+        await existingUser.save();
 
         res.status(201).json({success: true, id_class:newClass.id});
     } catch (error) {
@@ -40,13 +44,14 @@ export const registerTeacher = async (req: Request, res: Response): Promise<void
 
 export const registerStudent = async (req: Request, res: Response): Promise<void> => {
     try {
-        const {fullName, password,  email, role} = req.body;
+        const {fullName, password,  email, nameClass} = req.body;
         const newStudent: any = {
             
             fullName: fullName,
             password: password,
             email: email,
-            role: role
+            role: "student",
+            grades: []
         }
         if (!newStudent) {
             res.status(400).json({ message: 'No user data provided' , success: false});
@@ -54,10 +59,19 @@ export const registerStudent = async (req: Request, res: Response): Promise<void
         }
 
         const existingUser = await Users.create(newStudent);
-        
-        await newStudent.save();
+        await existingUser.save();
+        try {
+            const nameClassFind = await classRoomModel.find({name:nameClass});
 
-        res.status(201).json({ message: 'User created successfully' });
+            nameClassFind[0].students.push(existingUser._id);
+            await nameClassFind[0].save();
+
+        } catch{
+            res.status(400).json({ message: "name class not found", success: false });
+            return;
+        }
+
+        res.status(201).json({ message: 'User created successfully', Id_student: existingUser._id, success: true});
     } catch (error) {
         res.status(400).json({ message: `Error creating user ${error}` });
     }
@@ -65,11 +79,11 @@ export const registerStudent = async (req: Request, res: Response): Promise<void
 
 
 export const login = async (req: Request, res: Response): Promise<void> => {
-    const { passportId, password } = req.body;
+    const { Email, password } = req.body;
     console.log("in login");
         
     try {
-        const user = await Users.findOne({ passportId });
+        const user = await Users.findOne({ email: Email });
 
         if (!user || user.password !== password) {
             res.status(401).json({ message: 'Invalid credentials' });

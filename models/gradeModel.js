@@ -9,4 +9,4 @@ const gradeSchema = new Schema({
         required: [true, "Grade is required"],
     },
 });
-export default mongoose.model("Grade", gradeSchema);
+export const gradeModel = mongoose.model("Grade", gradeSchema);

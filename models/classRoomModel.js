@@ -3,7 +3,6 @@ const classSchema = new Schema({
     name: {
         type: String,
         required: [true, "Class name is required"],
-        unique: true,
         minlength: [3, "Class name must be at least 3 characters"],
     },
     teacher: {
@@ -17,4 +16,4 @@ const classSchema = new Schema({
         },
     ],
 });
-export default mongoose.model("Class", classSchema);
+export const classRoomModel = mongoose.model("Class", classSchema);
